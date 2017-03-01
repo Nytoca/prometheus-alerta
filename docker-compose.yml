@@ -1,0 +1,70 @@
+# docker-compose.yml
+version: '2'
+services:
+  testprometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus_data:/prometheus
+    command:
+      - '-config.file=/etc/prometheus/prometheus.yml'
+      - '-alertmanager.url=http://testalertmanager:9093'
+    ports:
+      - '9090:9090'
+
+  testnodeexporter:
+    image: prom/node-exporter
+    expose:
+      - 9100
+
+  testgrafana:
+    image: grafana/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - testprometheus
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+  testcadvisor:
+    image: google/cadvisor
+    expose:
+      - 8080
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:rw"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+
+  testalertmanager:
+    image: prom/alertmanager
+    expose:
+      - 9093
+    ports:
+      - "9093:9093"
+    volumes:
+      - "./alertmanager/:/etc/alertmanager/"
+
+  # Alerta
+  alerta_database:
+    image: mongo
+    expose:
+      - 27017
+
+  alerta_web:
+    image: alerta/alerta-web
+    expose:
+      - 80
+    ports:
+      - "8080:80"
+    environment:
+      - PLUGINS=
+      - MONGO_URI=mongodb://alerta_database:27017/monitoring
+    depends_on:
+      - alerta_database
+
+volumes:
+  prometheus_data: {}
+  grafana_data: {}
