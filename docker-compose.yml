@@ -17,6 +17,13 @@ services:
     expose:
       - 9100
 
+  pushgateway:
+    image: prom/pushgateway
+    expose:
+      - 9091
+    ports:
+      - "9091:9091"
+
   testgrafana:
     image: grafana/grafana
     environment:

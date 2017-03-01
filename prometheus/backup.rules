@@ -1,0 +1,9 @@
+ALERT BackupFailed
+  IF (backup_borg_exit_code or backup_preexec_exit_code or backup_postexec_exit_code) > 0
+  ANNOTATIONS {
+    summary = 'Backup "$label.job" has failed',
+    description = "Backup \"$label.job\" exited with status code \"$value\"",
+  }
+
+ALERT BackupNotCompleted
+  IF time() - backup_last_success_unixtime > 60 * 60 * 24
